@@ -1,18 +1,26 @@
-import { Message } from "../../../deps.ts";
+import { Message, sendMessage } from "../../../deps.ts";
 import {
   stringToSeconds,
   hypheniphyDate,
   humanizeDelta,
 } from "../../../helpers/humanizeDelta.ts";
 import { saveReminders } from "./saveReminder.ts";
-import { client } from "../../../index.ts";
+import { getReminders } from "./getReminders.ts";
 
 export const remind = async (ctx: Message) => {
-  const { content, author } = ctx;
+  const { content, author, channelID, guildID } = ctx;
 
-  const { id } = ctx.channel;
+  const hasContent = content.replace(/^!remind ?/, '').replace(/s+/, '');
+  
+  if (!hasContent) {
+    const reminders: string[] = [];
 
-  const guild_id = client.channelGuildIDs.get(id);
+    getReminders().forEach((item) => {
+      reminders.push(`* ${item.text} - ${humanizeDelta(item.ts - Date.now())}`)
+    })
+    
+    sendMessage(channelID, reminders.join('\n'))
+  }
 
   const userId = author.id;
 
@@ -31,13 +39,15 @@ export const remind = async (ctx: Message) => {
   const reminderTs = Date.now() + seconds * 1000;
 
   await saveReminders(
-    guild_id as string,
-    id,
+    guildID as string,
+    channelID,
     hypheniphyDate(new Date(reminderTs)),
-    `<@${userId}>, a reminder for you - ${msg}`
+    `<@${userId}>, a reminder for you - ${msg}`,
+    msg,
+    reminderTs
   );
 
   const willRemindInTs = reminderTs - Date.now();
   const willRemindInDate = humanizeDelta(willRemindInTs);
-  client.createMessage(ctx.channel.id, `Ok <@${userId}>! Will remind you in ${willRemindInDate}! `);
+  sendMessage(channelID, `Ok <@${userId}>! Will remind you in ${willRemindInDate}! `);
 };

@@ -17,6 +17,8 @@ import { gibap } from "./lib/quiz/gibap.ts";
 import { score } from "./lib/quiz/score.ts";
 import { scoresTop } from "./lib/quiz/scoresTop.ts";
 import { quizHelp } from "./lib/quiz/quizHelp.ts";
+import { spotify } from "./lib/spotify.ts";
+import { clearCache } from "./lib/dynamicComands/checkDynamicCommands.ts";
 
 list.set("!ping", ping);
 list.set("!echo", echo);
@@ -36,7 +38,6 @@ list.set("!quiz.make", makeQuiz);
 list.set("!quiz.score", score);
 list.set("!quiz.top", scoresTop);
 list.set("!quiz", quizHelp);
+list.set("!spotify", spotify);
+list.set("!clear-cache", clearCache);
 
-// @todo
-// !search
-// !spotify

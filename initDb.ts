@@ -12,7 +12,9 @@ export const initDb = async () => {
             guild TEXT,
             channel TEXT,
             time TEXT,
-            message TEXT
+            message TEXT,
+            text TEXT,
+            ts INTEGER
         )
     `,
         []
@@ -56,8 +58,28 @@ export const initDb = async () => {
         []
     );
 
+    try {
+        db.query(
+            `
+                ALTER TABLE reminders
+                ADD COLUMN ts INTEGER;
+            `
+        )
+
+        db.query(
+            `
+                ALTER TABLE reminders
+                ADD COLUMN text TEXT;
+            `
+        )
+
+    } catch (err) {
+        //
+    }
+
+
     const reminders = db.query(`SELECT * FROM reminders`, {}) || [];
-    [...reminders].map(([id, guild, channel, time, message]: any) => {
+    [...reminders].map(([id, guild, channel, time, message, text, ts]: any) => {
         const remindersMap = getReminders();
         remindersMap.set(id, {
             guild,
@@ -65,6 +87,8 @@ export const initDb = async () => {
             time,
             message,
             id,
+            text,
+            ts
         });
     });
 

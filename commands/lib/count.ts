@@ -1,10 +1,9 @@
-import { Message } from "../../deps.ts";
-import { client } from "../../index.ts";
+import { Message, sendMessage } from "../../deps.ts";
 
 const rowsRegex = /<tr>\n+.+<td>(<.+?>)?([A-Ž0-9]+|[A-Ž]+ [A-Ž]+)<.+?>+\n+.+<td>([0-9]+)<\/td>/gm;
 const tdRegex = /<td>(<.+?>)?([A-Ž0-9]+|[A-Ž]+ [A-Ž]+)<.+?>/gm;
 export const count = async (ctx: Message) => {
-  const { content, channel } = ctx;
+  const { content, channelID } = ctx;
 
   let query = content.replace(/!count ?/, "");
 
@@ -14,12 +13,11 @@ export const count = async (ctx: Message) => {
 
   query = encodeURIComponent(query);
 
-  const url = `http://www.pmlp.gov.lv/lv/sakums/statistika/personvardu-datu-baze/?id=137&query=${query}`;
+  const url = `https://personvardi.pmlp.gov.lv/index.php?name=${query}`;
 
   const req = new Request(url);
   const res = await fetch(req);
-
-  const data = await res.text();
+  const data = (await res.text()).replace(/\r/g, '');
 
   let rows = data.match(rowsRegex);
 
@@ -28,7 +26,7 @@ export const count = async (ctx: Message) => {
   for (let i = 0; i < 3; i++) {
     const row = rows && rows[i];
     if (!row) {
-      return;
+      break;
     }
     const [nameMatch, countMatch] = row.match(tdRegex) || [];
     const [name] = nameMatch.match(/>[A-Ž]+ [A-Ž]+|>[A-Ž]+/) || [];
@@ -45,13 +43,13 @@ export const count = async (ctx: Message) => {
   }
 
   if (results.length) {
-    client.createMessage(
-      channel.id,
-      `PMPL stāsta, ka Latvijā ir apmēram šādi - ${results.join(
+    sendMessage(
+      channelID,
+      `PMLP stāsta, ka Latvijā ir apmēram šādi - ${results.join(
         ", "
       )}. http://vd.jurg.is/n?q=${query}`
     );
   } else {
-    client.createMessage(channel.id, `PMLP saka, ka nav ar šādu vārdu neviens.`);
+    sendMessage(channelID, `PMLP saka, ka nav ar šādu vārdu neviens.`);
   }
 };
